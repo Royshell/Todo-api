@@ -12,41 +12,47 @@ app.use(bodyParser.json());
 app.get('/', function(req, res) {
 	res.send("Todo API Root");
 });
- 
- // GET /todos?completed=true&q=work
+
+// GET /todos?completed=true&q=work
 app.get('/todos', function(req, res) {
 	var queryParams = req.query;
 	var filteredTodos = todos;
 
 	if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
-		filteredTodos = _.where(filteredTodos, {completed: true });
+		filteredTodos = _.where(filteredTodos, {
+			completed: true
+		});
 	} else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
-		filteredTodos = _.where(filteredTodos, {completed: false});
+		filteredTodos = _.where(filteredTodos, {
+			completed: false
+		});
 	}
 
-	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0 ) {
-		filteredTodos = _.filter(filteredTodos, function(todo){
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
+		filteredTodos = _.filter(filteredTodos, function(todo) {
 			return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1
-		});
+		})
 	}
 
 	res.json(filteredTodos);
 });
 
- // GET /todos/:id
+// GET /todos/:id
 app.get('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
-	var mathedTodo = _.findWhere(todos, {id: todoId});
+	var mathedTodo = _.findWhere(todos, {
+		id: todoId
+	});
 
 	if (mathedTodo) {
-		res.json(mathedTodo);	
+		res.json(mathedTodo);
 	} else {
 		res.status(404).send();
-	}	
+	}
 });
 
 // POST /todos/
-app.post('/todos', function (req, res){
+app.post('/todos', function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
 	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
@@ -58,50 +64,56 @@ app.post('/todos', function (req, res){
 
 	//push body into array
 	todos.push(body);
-	
+
 	res.json(body);
-}); 
+});
 
 // DELETE /todos/:id 
 app.delete('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
-	var mathedTodo = _.findWhere(todos, {id: todoId});
+	var mathedTodo = _.findWhere(todos, {
+		id: todoId
+	});
 
 	if (!mathedTodo) {
-		res.status(404).json({"error": "no todo found with that id"})
-		} else {
-		todos = _.without(todos, mathedTodo );
+		res.status(404).json({
+			"error": "no todo found with that id"
+		})
+	} else {
+		todos = _.without(todos, mathedTodo);
 		res.json(mathedTodo);
-	}	
+	}
 });
 
 // PUT  /todos/:id
 app.put('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
-	var mathedTodo = _.findWhere(todos, {id: todoId});
+	var mathedTodo = _.findWhere(todos, {
+		id: todoId
+	});
 	var body = _.pick(req.body, 'description', 'completed');
 	var validAttributes = {};
 
 	if (!mathedTodo) {
-		return res.status(404). send();
+		return res.status(404).send();
 	}
 
 	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
 		validAttributes.completed = body.completed;
-	} else if  (body.hasOwnProperty('completed')){
+	} else if (body.hasOwnProperty('completed')) {
 		return res.status(400).send();
 	}
 
 	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
 		validAttributes.description = body.description;
-	} else if  (body.hasOwnProperty('description')){
+	} else if (body.hasOwnProperty('description')) {
 		return res.status(400).send();
-	} 
+	}
 
 	_.extend(mathedTodo, validAttributes);
 	res.json(mathedTodo);
 });
 
-app.listen(PORT, function () {
+app.listen(PORT, function() {
 	console.log('Express listening on port ' + PORT + '!');
 });
