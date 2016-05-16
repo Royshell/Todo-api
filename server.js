@@ -45,8 +45,6 @@ app.get('/todos', function(req, res) {
 	}).catch(function(e) {
 		res.status(500).json(e);
 	});
-
-	// res.json(filteredTodos);
 });
 
 // GET /todos/:id
@@ -65,7 +63,7 @@ app.get('/todos/:id', function(req, res) {
 	});
 });
 
-// POST /todos/
+// POST /todos
 app.post('/todos', function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
@@ -95,27 +93,6 @@ app.delete('/todos/:id', function(req, res) {
 	}).catch(function(e) {
 		res.status(500).send();
 	});
-
-	// findById(todoId).then(function(todo) {
-	// 	if (!!todo) {
-	// 		res.json(todo.toJSON());
-	// 	} else {
-	// 		res.status(404).send();
-	// 	}
-
-
-	// var mathedTodo = _.findWhere(todos, {
-	// 	id: todoId
-	// });
-
-	// if (!mathedTodo) {
-	// 	res.status(404).json({
-	// 		"error": "no todo found with that id"
-	// 	})
-	// } else {
-	// 	todos = _.without(todos, mathedTodo);
-	// 	res.json(mathedTodo);
-	// }
 });
 
 // PUT  /todos/:id
@@ -145,6 +122,70 @@ app.put('/todos/:id', function(req, res) {
 			res.status(404).send();
 		}
 	}, function() {
+		res.status(500).send();
+	});
+});
+
+// POST /users
+app.post('/users', function(req, res) {
+	var body = _.pick(req.body, 'email', 'password');
+
+	db.user.create(body).then(function(user) {
+		res.json(user.toJSON());
+	}).catch(function(e) {
+		res.status(404).json(e);
+	});
+});
+
+// GET /users?completed=true&q=work
+app.get('/users', function(req, res) {
+	var queryParams = req.query;
+
+	var where = {};
+
+	if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
+		where.completed = true;
+	} else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
+		where.completed = false;
+	}
+
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
+
+		where.description = {
+			$like: '%' + queryParams.q + '%'
+		};
+	}
+
+	db.user.findAll({
+		where: where
+	}).then(function(users) {
+		if (!!users) {
+			res.json(users);
+		} else {
+			console.log("No users found");
+		}
+	}).catch(function(e) {
+		res.status(500).json(e);
+	});
+});
+
+// DELETE /users/:id 
+app.delete('/users/:id', function(req, res) {
+	var userId = parseInt(req.params.id, 10);
+
+	db.user.destroy({
+		where: {
+			id: [userId]
+		}
+	}).then(function(rowsDeleted) {
+		if (rowsDeleted === 0) {
+			res.status(404).json({
+				error: 'No todo with id'
+			});
+		} else {
+			res.status(204).send();
+		}
+	}).catch(function(e) {
 		res.status(500).send();
 	});
 });
