@@ -2,7 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
 var db = require('./db.js');
-
+var bcrypt = require('bcryptjs');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -98,7 +98,7 @@ app.delete('/todos/:id', function(req, res) {
 // PUT  /todos/:id
 app.put('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
-	
+
 	var body = _.pick(req.body, 'description', 'completed');
 	var attributes = {};
 
@@ -111,9 +111,9 @@ app.put('/todos/:id', function(req, res) {
 		attributes.description = body.description;
 	}
 
-	db.todo.findById(todoId).then(function (todo) {
+	db.todo.findById(todoId).then(function(todo) {
 		if (todo) {
-			todo.update(attributes).then(function(todo){
+			todo.update(attributes).then(function(todo) {
 				res.json(todo.toJSON());
 			}, function(e) {
 				res.status(400).json(e);
@@ -134,6 +134,17 @@ app.post('/users', function(req, res) {
 		res.json(user.toPublicJSON());
 	}).catch(function(e) {
 		res.status(404).json(e);
+	});
+});
+
+// POST /users/login
+app.post('/users/login', function(req, res) {
+	var body = _.pick(req.body, 'email', 'password');
+
+	db.user.authenticate(body).then(function (user) {
+		res.json(user.toPublicJSON());
+	}, function () {
+		res.status(401).send();
 	});
 });
 
